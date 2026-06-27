@@ -88,9 +88,13 @@ function scoresAsMap() {
 // typing in and the keyboard stays up) instead of re-rendering everything.
 function applySession(s, live) {
   if (!s) return;
+  // NOTE: compare order-insensitively. Firestore returns map/object keys in a
+  // different order than our local copy, so a naive JSON.stringify would always
+  // look "changed" and force a full re-render — which destroys the score input
+  // the user is typing in. Normalise first.
   const structureChanged =
-    JSON.stringify(state.players) !== JSON.stringify(s.players || []) ||
-    JSON.stringify(state.assign) !== JSON.stringify(s.assign || {}) ||
+    playersKey(state.players) !== playersKey(s.players || []) ||
+    assignKey(state.assign) !== assignKey(s.assign || {}) ||
     state.courts !== (s.courts ?? state.courts);
 
   state.title = s.meta?.title ?? state.title;
@@ -107,6 +111,14 @@ function applySession(s, live) {
   // A pure score update on the Play tab is patched in place below.
   if (!live || structureChanged || view !== "play") { render(); return; }
   patchScoresInPlace();
+}
+
+// Order-insensitive signatures for change detection (Firestore reorders keys).
+function playersKey(arr) {
+  return (arr || []).map(p => `${p.id}:${p.name}`).sort().join("|");
+}
+function assignKey(obj) {
+  return Object.keys(obj || {}).sort().map(k => `${k}=${obj[k]}`).join("|");
 }
 
 // Update score inputs + totals from current state WITHOUT rebuilding the DOM.
