@@ -26,4 +26,11 @@
    These web keys are NOT secret — they only identify your project. Access is
    controlled by Firestore security rules (see SYNC_SETUP.md).
    ============================================================================ */
-window.FIREBASE_CONFIG = null;
+window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDZ559-nKkJ7M3ylPefvvXouxdn8LotlAo",
+  authDomain: "laddy-6cd07.firebaseapp.com",
+  projectId: "laddy-6cd07",
+  storageBucket: "laddy-6cd07.firebasestorage.app",
+  messagingSenderId: "940473999671",
+  appId: "1:940473999671:web:c2f6469ffaadeccc067ab2"
+};
