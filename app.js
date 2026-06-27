@@ -786,28 +786,28 @@ function buildPayload() {
 // Draw the results onto a canvas and return a PNG Blob. Zero dependencies.
 function buildResultsImage() {
   const p = buildPayload();
-  const W = 1080;
-  const PAD = 40, GAP = 28;
-  const ROW_H = 52, HEAD_H = 54, COURT_TITLE_H = 56, CHAMP_H = 40;
-  const GAME_HEAD_H = 40, GAME_ROW_H = 46, SECTION_GAP = 10;
+  const W = 1280;
+  const PAD = 36, GAP = 26, COL_GAP = 20;
+  const ROW_H = 48, HEAD_H = 46, COURT_TITLE_H = 54, CHAMP_H = 38;
+  const GAME_ROW_H = 44;
+  const FONT = "Arial, Helvetica, sans-serif";
+
+  // Per-court body height = the taller of the two side-by-side columns.
+  const bodyH = g => Math.max(
+    HEAD_H + g.players.length * ROW_H,        // standings column
+    HEAD_H + g.games.length * GAME_ROW_H      // games column
+  );
 
   // --- measure total height first ---
-  let h = 0;
-  h += 140;                              // top banner
-  p.groups.forEach(g => {
-    h += GAP + COURT_TITLE_H + CHAMP_H + HEAD_H;
-    h += g.players.length * ROW_H;
-    // games section: a header + one row per game
-    h += SECTION_GAP + GAME_HEAD_H + g.games.length * GAME_ROW_H;
-  });
-  h += GAP + 64;                          // footer
+  let h = 140;                               // top banner
+  p.groups.forEach(g => { h += GAP + COURT_TITLE_H + CHAMP_H + bodyH(g); });
+  h += GAP + 56;                             // footer
 
-  const dpr = 2;                          // crisp on phones
+  const dpr = 2;                             // crisp on phones
   const cv = document.createElement("canvas");
   cv.width = W * dpr; cv.height = h * dpr;
   const x = cv.getContext("2d");
   x.scale(dpr, dpr);
-  const FONT = "Arial, Helvetica, sans-serif";
 
   // background
   x.fillStyle = "#eef1f7"; x.fillRect(0, 0, W, h);
@@ -831,6 +831,13 @@ function buildResultsImage() {
   const accents = [["#2563ff","#13b5ff"],["#7c3aed","#c026d3"],["#0d9488","#22c55e"],["#ea580c","#f59e0b"]];
   const MEDAL = { 1: "🏆", 2: "🥈", 3: "🥉" };
 
+  // fit text into maxW by shrinking font down to a floor
+  const fitFont = (text, weight, size, maxW, floor) => {
+    let s = size;
+    do { x.font = `${weight} ${s}px ${FONT}`; } while (x.measureText(text).width > maxW && --s >= floor);
+    return x.font;
+  };
+
   p.groups.forEach((g, gi) => {
     y += GAP;
     const left = PAD, right = W - PAD, width = right - left;
@@ -839,8 +846,7 @@ function buildResultsImage() {
     const [c1, c2] = accents[gi % accents.length];
     const cg = x.createLinearGradient(left, y, right, y);
     cg.addColorStop(0, c1); cg.addColorStop(1, c2);
-    roundRect(x, left, y, width, COURT_TITLE_H, 12, true, false);
-    x.fillStyle = cg; x.fill();
+    roundRect(x, left, y, width, COURT_TITLE_H, 12); x.fillStyle = cg; x.fill();
     x.fillStyle = "#fff"; x.font = `800 26px ${FONT}`; x.textBaseline = "middle";
     x.fillText(`Group ${g.label}`, left + 18, y + COURT_TITLE_H / 2);
     x.textAlign = "right"; x.font = `600 18px ${FONT}`;
@@ -848,85 +854,88 @@ function buildResultsImage() {
     x.textAlign = "left";
     y += COURT_TITLE_H;
 
-    // champion strip
     const sorted = g.players.slice().sort((a, b) => a.ranking - b.ranking);
     const champ = sorted.find(pl => pl.ranking === 1);
+
+    // champion strip (full width)
     x.fillStyle = "#fff7d6"; x.fillRect(left, y, width, CHAMP_H);
-    x.fillStyle = "#7a5b00"; x.font = `bold 19px ${FONT}`;
+    x.fillStyle = "#7a5b00"; x.font = `bold 18px ${FONT}`;
     x.fillText(`🏆 Champion: ${champ ? champ.name : "—"}`, left + 16, y + CHAMP_H / 2);
     if (champ) {
-      x.textAlign = "right";
-      x.fillText(`${champ.total} pts`, right - 16, y + CHAMP_H / 2);
+      x.textAlign = "right"; x.fillText(`${champ.total} pts`, right - 16, y + CHAMP_H / 2);
       x.textAlign = "left";
     }
     y += CHAMP_H;
 
-    // table header
-    const cRank = left + 16, cName = left + 130, cTot = right - 16;
-    x.fillStyle = "#1b1f3b"; x.fillRect(left, y, width, HEAD_H);
-    x.fillStyle = "#fff"; x.font = `700 18px ${FONT}`;
-    x.fillText("RANK", cRank, y + HEAD_H / 2);
-    x.fillText("PLAYER", cName, y + HEAD_H / 2);
-    x.textAlign = "right"; x.fillText("TOTAL", cTot, y + HEAD_H / 2); x.textAlign = "left";
-    y += HEAD_H;
+    // two columns: standings (38%) | games (62%)
+    const top = y;
+    const stW = Math.round(width * 0.38);
+    const stL = left, stR = stL + stW;
+    const gmL = stR + COL_GAP, gmR = right, gmW = gmR - gmL;
 
-    // rows
+    /* ----- LEFT: standings ----- */
+    let sy = top;
+    const cRank = stL + 12, cName = stL + 96, cTot = stR - 12;
+    x.fillStyle = "#1b1f3b"; x.fillRect(stL, sy, stW, HEAD_H);
+    x.fillStyle = "#fff"; x.font = `700 16px ${FONT}`; x.textBaseline = "middle";
+    x.fillText("RANK", cRank, sy + HEAD_H / 2);
+    x.fillText("PLAYER", cName, sy + HEAD_H / 2);
+    x.textAlign = "right"; x.fillText("TOT", cTot, sy + HEAD_H / 2); x.textAlign = "left";
+    sy += HEAD_H;
     sorted.forEach(pl => {
       const tint = pl.ranking === 1 ? "#fff4c2" : pl.ranking === 2 ? "#eef1f6"
                  : pl.ranking === 3 ? "#fbe6d2" : "#ffffff";
-      x.fillStyle = tint; x.fillRect(left, y, width, ROW_H);
-      x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(left, y, width, ROW_H);
-      x.fillStyle = "#161a2b"; x.font = `bold 22px ${FONT}`;
-      const medal = MEDAL[pl.ranking] || "";
-      x.fillText(`${medal} ${pl.ranking}`.trim(), cRank, y + ROW_H / 2);
-      x.font = `500 22px ${FONT}`;
-      x.fillText(pl.name, cName, y + ROW_H / 2);
-      x.textAlign = "right"; x.font = `bold 22px ${FONT}`;
-      x.fillText(String(pl.total), cTot, y + ROW_H / 2); x.textAlign = "left";
-      y += ROW_H;
+      x.fillStyle = tint; x.fillRect(stL, sy, stW, ROW_H);
+      x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(stL, sy, stW, ROW_H);
+      const mid = sy + ROW_H / 2;
+      x.fillStyle = "#161a2b"; x.font = `bold 20px ${FONT}`;
+      x.fillText(`${MEDAL[pl.ranking] || ""} ${pl.ranking}`.trim(), cRank, mid);
+      fitFont(pl.name, "500", 19, cTot - cName - 30, 13); x.fillStyle = "#161a2b";
+      x.fillText(pl.name, cName, mid);
+      x.textAlign = "right"; x.font = `bold 20px ${FONT}`;
+      x.fillText(String(pl.total), cTot, mid); x.textAlign = "left";
+      sy += ROW_H;
     });
 
-    // --- games section (game-by-game scores) ---
-    y += SECTION_GAP;
-    const cGame = left + 16, cScore = left + width / 2;
-    x.fillStyle = "#1b1f3b"; x.fillRect(left, y, width, GAME_HEAD_H);
+    /* ----- RIGHT: games ----- */
+    let gy = top;
+    x.fillStyle = "#1b1f3b"; x.fillRect(gmL, gy, gmW, HEAD_H);
     x.fillStyle = "#fff"; x.font = `700 16px ${FONT}`;
-    x.fillText("GAME", cGame, y + GAME_HEAD_H / 2);
-    x.fillText("MATCH-UP", left + 110, y + GAME_HEAD_H / 2);
-    x.textAlign = "center"; x.fillText("SCORE", cScore, y + GAME_HEAD_H / 2); x.textAlign = "left";
-    y += GAME_HEAD_H;
-
+    x.fillText("GAME", gmL + 12, gy + HEAD_H / 2);
+    x.fillText("MATCH-UP", gmL + 90, gy + HEAD_H / 2);
+    gy += HEAD_H;
+    const gScore = gmL + Math.round(gmW * 0.52);   // score column anchor
     g.games.forEach((m, mi) => {
       x.fillStyle = mi % 2 ? "#f6f8fc" : "#ffffff";
-      x.fillRect(left, y, width, GAME_ROW_H);
-      x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(left, y, width, GAME_ROW_H);
-      const mid = y + GAME_ROW_H / 2;
+      x.fillRect(gmL, gy, gmW, GAME_ROW_H);
+      x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(gmL, gy, gmW, GAME_ROW_H);
+      const mid = gy + GAME_ROW_H / 2;
       // game pill
-      x.fillStyle = "#2563ff"; roundRect(x, cGame, mid - 13, 56, 26, 13); x.fill();
-      x.fillStyle = "#fff"; x.font = `bold 15px ${FONT}`; x.textAlign = "center";
-      x.fillText(`G${m.game}`, cGame + 28, mid);
-      x.textAlign = "left";
-      // team A & B, winner bold green
+      x.fillStyle = "#2563ff"; roundRect(x, gmL + 12, mid - 12, 50, 24, 12); x.fill();
+      x.fillStyle = "#fff"; x.font = `bold 14px ${FONT}`; x.textAlign = "center";
+      x.fillText(`G${m.game}`, gmL + 37, mid); x.textAlign = "left";
+      // teams (winner bold green), score centered
       const aWin = m.scoreA > m.scoreB, bWin = m.scoreB > m.scoreA;
       const teamA = `${m.teamA[0]} & ${m.teamA[1]}`, teamB = `${m.teamB[0]} & ${m.teamB[1]}`;
-      x.font = `${aWin ? "bold" : "500"} 17px ${FONT}`;
+      const sideMax = gScore - (gmL + 74) - 8;
+      fitFont(teamA, aWin ? "bold" : "500", 15, sideMax, 11);
       x.fillStyle = aWin ? "#1b6b39" : "#161a2b"; x.textAlign = "right";
-      x.fillText(teamA, cScore - 64, mid);
-      x.font = `${bWin ? "bold" : "500"} 17px ${FONT}`;
+      x.fillText(teamA, gScore - 40, mid);
+      fitFont(teamB, bWin ? "bold" : "500", 15, gmR - (gScore + 40) - 12, 11);
       x.fillStyle = bWin ? "#1b6b39" : "#161a2b"; x.textAlign = "left";
-      x.fillText(teamB, cScore + 64, mid);
-      // score in the middle
-      x.fillStyle = "#1b1f3b"; x.font = `bold 19px ${FONT}`; x.textAlign = "center";
-      x.fillText(`${m.scoreA} – ${m.scoreB}`, cScore, mid);
-      x.textAlign = "left";
-      y += GAME_ROW_H;
+      x.fillText(teamB, gScore + 40, mid);
+      x.fillStyle = "#1b1f3b"; x.font = `bold 18px ${FONT}`; x.textAlign = "center";
+      x.fillText(`${m.scoreA}–${m.scoreB}`, gScore, mid); x.textAlign = "left";
+      gy += GAME_ROW_H;
     });
+
+    y = top + bodyH(g);
   });
 
   // footer
   y += GAP;
-  x.fillStyle = "#6b7280"; x.font = `16px ${FONT}`; x.textAlign = "center";
-  x.fillText("Generated by Laddy 🏸  ·  Total = points your pair scored across your games", W / 2, y + 12);
+  x.fillStyle = "#6b7280"; x.font = `15px ${FONT}`; x.textAlign = "center";
+  x.fillText("Generated by Laddy 🏸  ·  Total = points your pair scored across your games", W / 2, y);
   x.textAlign = "left";
 
   return new Promise(res => cv.toBlob(b => res(b), "image/png"));
