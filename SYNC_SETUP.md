@@ -41,9 +41,16 @@ service cloud.firestore {
       // Session IDs are random 6-char codes; knowing the code grants access.
       allow read, write: if true;
     }
+    // Global "ladder games played" counter shown on the Home page.
+    match /stats/global {
+      allow read, write: if true;
+    }
   }
 }
 ```
+
+> **The `stats/global` block is required for the Home-page counter.** Without it,
+> the counter just stays hidden (the app fails soft) — sessions still work fine.
 
 > This is fine for casual badminton sessions (the code is the shared secret, and old sessions are harmless). If you later want it locked down — e.g. only the host can change the roster, or sessions auto-expire — tell me and I'll add Firebase Anonymous Auth + tighter rules + a TTL field.
 

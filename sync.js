@@ -69,6 +69,12 @@
         s.updatedAt = stamp();
         write(id, s);
       },
+      async getCounter() { return +localStorage.getItem("bl_games_count") || 0; },
+      async bumpCounter() {
+        const n = (+localStorage.getItem("bl_games_count") || 0) + 1;
+        localStorage.setItem("bl_games_count", String(n));
+        return n;
+      },
     };
   }
 
@@ -80,6 +86,7 @@
     const fbApp = app.initializeApp(config);
     const db = fs.getFirestore(fbApp);
     const ref = id => fs.doc(db, "sessions", id);
+    const statsRef = () => fs.doc(db, "stats", "global");
 
     return {
       mode: "firebase",
@@ -102,6 +109,15 @@
           [SCORE_PATH(court, game, side)]: value,
           updatedAt: stamp(),
         });
+      },
+      async getCounter() {
+        const snap = await fs.getDoc(statsRef());
+        return (snap.exists() && snap.data().games) || 0;
+      },
+      async bumpCounter() {
+        // Atomic increment; setDoc+merge creates the doc on first use.
+        await fs.setDoc(statsRef(), { games: fs.increment(1) }, { merge: true });
+        return this.getCounter();
       },
     };
   }
@@ -143,6 +159,14 @@
     async join(id, onChange) { return (await backend()).join(id, onChange); },
     async setScore(id, court, game, side, value) {
       return (await backend()).setScore(id, court, game, side, value);
+    },
+    // Global "games finalized" counter. Fails soft (returns 0 / no-op) if the
+    // Firestore rules don't allow the stats doc, so it never breaks the app.
+    async getCounter() {
+      try { return await (await backend()).getCounter(); } catch { return 0; }
+    },
+    async bumpCounter() {
+      try { return await (await backend()).bumpCounter(); } catch { return 0; }
     },
   };
 

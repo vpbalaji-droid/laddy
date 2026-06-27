@@ -314,6 +314,9 @@ function renderHome() {
         ${n ? "Continue →" : "Get started →"}
       </button>
       ${n ? `<p class="help" style="text-align:center">${n} player${n!==1?"s":""} on the roster${hasGroups ? " · groups ready" : ""}.</p>` : ""}
+      <div class="counter" id="gamesCounter" hidden>
+        🏸 LaddR has helped run <b id="gamesCount">…</b> ladder games so far
+      </div>
     </div>
 
     <div class="card">
@@ -341,6 +344,14 @@ function renderHome() {
 
   document.getElementById("homeStart").onclick = () => setView(n ? "setup" : "players");
   app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => setView(b.dataset.go));
+
+  // fetch the global counter and reveal it (only if > 0)
+  Sync.getCounter().then(count => {
+    if (view !== "home") return;            // user navigated away
+    const wrap = document.getElementById("gamesCounter");
+    const num = document.getElementById("gamesCount");
+    if (wrap && num && count > 0) { num.textContent = count.toLocaleString(); wrap.hidden = false; }
+  }).catch(() => {});
 }
 
 /* ---------- Players ---------- */
@@ -1011,6 +1022,20 @@ function roundRect(ctx, x, y, w, hh, r) {
   ctx.closePath();
 }
 
+// Bump the global "ladder games" counter once per finalized session. A session
+// is identified by its share id, or a local pseudo-id for offline play, so
+// sharing the image AND saving a PDF for the same meet only counts once.
+async function markFinalized() {
+  const key = "bl_finalized_ids";
+  let done; try { done = JSON.parse(localStorage.getItem(key)) || []; } catch { done = []; }
+  const id = sessionId || ("local-" + (localStorage.getItem("bl_local_seq") || "0"));
+  if (done.includes(id)) return;
+  done.push(id); localStorage.setItem(key, JSON.stringify(done));
+  // advance the local pseudo-id so the next offline meet counts separately
+  if (!sessionId) localStorage.setItem("bl_local_seq", String((+localStorage.getItem("bl_local_seq") || 0) + 1));
+  try { await Sync.bumpCounter(); } catch {}
+}
+
 async function shareResultsImage() {
   const btn = document.getElementById("shareImgBtn");
   if (btn) { btn.disabled = true; btn.textContent = "Preparing image…"; }
@@ -1022,12 +1047,14 @@ async function shareResultsImage() {
     // Preferred path: native share sheet with the image file (Android Chrome).
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
       await navigator.share({ files: [file], title: state.title, text: `${state.title} — results 🏸` });
+      markFinalized();
     } else {
       // Fallback: download the PNG so the user can attach it manually.
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url; a.download = fname; a.click();
       URL.revokeObjectURL(url);
+      markFinalized();
       toast("Image saved — attach it in WhatsApp");
     }
   } catch (e) {
@@ -1049,6 +1076,7 @@ function finalizeAndPrint() {
   document.body.appendChild(frame);
   const doc = frame.contentWindow.document;
   doc.open(); doc.write(html); doc.close();
+  markFinalized();
   // give the iframe a tick to lay out, then print
   frame.onload = () => {
     setTimeout(() => {
