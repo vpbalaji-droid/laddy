@@ -18,7 +18,7 @@
   <g clip-path="url(#shield)">
     <rect x="80" y="30" width="352" height="452" fill="#ffffff"/>
     <!-- green diagonal ladder climbing up-right -->
-    <g stroke="#27ae45" stroke-width="26" stroke-linecap="round">
+    <g stroke="#ea6a1e" stroke-width="26" stroke-linecap="round">
       <!-- two rails -->
       <line x1="120" y1="430" x2="330" y2="150"/>
       <line x1="170" y1="448" x2="380" y2="168"/>
@@ -30,7 +30,7 @@
       <line x1="294" y1="200" x2="356" y2="198"/>
     </g>
     <!-- soft green leaf accent on the right -->
-    <path d="M360 150 C 392 220 392 300 320 360 C 360 290 352 220 360 150 Z" fill="#27ae45" opacity="0.85"/>
+    <path d="M360 150 C 392 220 392 300 320 360 C 360 290 352 220 360 150 Z" fill="#f59e0b" opacity="0.85"/>
   </g>
 
   <!-- navy shield border -->
@@ -41,10 +41,10 @@
            C 342 430 416 360 416 250
            L 416 80
            C 362 80 312 70 256 40 Z"
-        fill="none" stroke="#163a6b" stroke-width="20" stroke-linejoin="round"/>
+        fill="none" stroke="#2b2233" stroke-width="20" stroke-linejoin="round"/>
 
   <!-- motion streaks behind the shuttlecock -->
-  <g stroke="#163a6b" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.92">
+  <g stroke="#2b2233" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.92">
     <path d="M120 250 Q 175 215 235 205"/>
     <path d="M132 290 Q 190 250 250 240"/>
   </g>
@@ -52,7 +52,7 @@
   <!-- shuttlecock, flying up-right -->
   <g transform="rotate(34 270 175)">
     <!-- feather skirt -->
-    <g fill="#ffffff" stroke="#163a6b" stroke-width="6" stroke-linejoin="round">
+    <g fill="#ffffff" stroke="#2b2233" stroke-width="6" stroke-linejoin="round">
       <path d="M270 70 L244 200 L296 200 Z"/>
       <path d="M236 86 L232 206 L270 200 Z"/>
       <path d="M304 86 L308 206 L270 200 Z"/>
@@ -65,7 +65,7 @@
       <line x1="290" y1="104" x2="282" y2="196"/>
     </g>
     <!-- cork base -->
-    <ellipse cx="270" cy="214" rx="40" ry="30" fill="#163a6b"/>
-    <ellipse cx="270" cy="210" rx="40" ry="26" fill="#1f4f93"/>
+    <ellipse cx="270" cy="214" rx="40" ry="30" fill="#c2410c"/>
+    <ellipse cx="270" cy="210" rx="40" ry="26" fill="#ea6a1e"/>
   </g>
 </svg>
