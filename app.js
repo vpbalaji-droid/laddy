@@ -315,7 +315,7 @@ function renderHome() {
       </button>
       ${n ? `<p class="help" style="text-align:center">${n} player${n!==1?"s":""} on the roster${hasGroups ? " · groups ready" : ""}.</p>` : ""}
       <div class="counter" id="gamesCounter" hidden>
-        🏸 LaddR has helped run <b id="gamesCount">…</b> ladder games so far
+        🏸 LaddR has powered <b id="ladderCount">…</b> ladders &amp; <b id="gameCount">…</b> games so far
       </div>
     </div>
 
@@ -345,12 +345,17 @@ function renderHome() {
   document.getElementById("homeStart").onclick = () => setView(n ? "setup" : "players");
   app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => setView(b.dataset.go));
 
-  // fetch the global counter and reveal it (only if > 0)
-  Sync.getCounter().then(count => {
+  // fetch the global counter and reveal it (only once there's at least 1 ladder)
+  Sync.getCounter().then(c => {
     if (view !== "home") return;            // user navigated away
     const wrap = document.getElementById("gamesCounter");
-    const num = document.getElementById("gamesCount");
-    if (wrap && num && count > 0) { num.textContent = count.toLocaleString(); wrap.hidden = false; }
+    const lEl = document.getElementById("ladderCount");
+    const gEl = document.getElementById("gameCount");
+    if (wrap && lEl && gEl && c && c.ladders > 0) {
+      lEl.textContent = c.ladders.toLocaleString();
+      gEl.textContent = c.games.toLocaleString();
+      wrap.hidden = false;
+    }
   }).catch(() => {});
 }
 
@@ -1033,7 +1038,9 @@ async function markFinalized() {
   done.push(id); localStorage.setItem(key, JSON.stringify(done));
   // advance the local pseudo-id so the next offline meet counts separately
   if (!sessionId) localStorage.setItem("bl_local_seq", String((+localStorage.getItem("bl_local_seq") || 0) + 1));
-  try { await Sync.bumpCounter(); } catch {}
+  // total games across all courts in this ladder
+  const games = (state.groups || []).reduce((sum, g) => sum + scheduleFor(g).length, 0);
+  try { await Sync.bumpCounter(games); } catch {}
 }
 
 async function shareResultsImage() {

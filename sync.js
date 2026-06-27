@@ -69,11 +69,18 @@
         s.updatedAt = stamp();
         write(id, s);
       },
-      async getCounter() { return +localStorage.getItem("bl_games_count") || 0; },
-      async bumpCounter() {
-        const n = (+localStorage.getItem("bl_games_count") || 0) + 1;
-        localStorage.setItem("bl_games_count", String(n));
-        return n;
+      async getCounter() {
+        return {
+          ladders: +localStorage.getItem("bl_ladders_count") || 0,
+          games: +localStorage.getItem("bl_games_count") || 0,
+        };
+      },
+      async bumpCounter(games) {
+        const l = (+localStorage.getItem("bl_ladders_count") || 0) + 1;
+        const g = (+localStorage.getItem("bl_games_count") || 0) + (games || 0);
+        localStorage.setItem("bl_ladders_count", String(l));
+        localStorage.setItem("bl_games_count", String(g));
+        return { ladders: l, games: g };
       },
     };
   }
@@ -112,11 +119,15 @@
       },
       async getCounter() {
         const snap = await fs.getDoc(statsRef());
-        return (snap.exists() && snap.data().games) || 0;
+        const d = (snap.exists() && snap.data()) || {};
+        return { ladders: d.ladders || 0, games: d.games || 0 };
       },
-      async bumpCounter() {
-        // Atomic increment; setDoc+merge creates the doc on first use.
-        await fs.setDoc(statsRef(), { games: fs.increment(1) }, { merge: true });
+      async bumpCounter(games) {
+        // Atomic increments; setDoc+merge creates the doc on first use.
+        await fs.setDoc(statsRef(), {
+          ladders: fs.increment(1),
+          games: fs.increment(games || 0),
+        }, { merge: true });
         return this.getCounter();
       },
     };
@@ -163,10 +174,10 @@
     // Global "games finalized" counter. Fails soft (returns 0 / no-op) if the
     // Firestore rules don't allow the stats doc, so it never breaks the app.
     async getCounter() {
-      try { return await (await backend()).getCounter(); } catch { return 0; }
+      try { return await (await backend()).getCounter(); } catch { return { ladders: 0, games: 0 }; }
     },
-    async bumpCounter() {
-      try { return await (await backend()).bumpCounter(); } catch { return 0; }
+    async bumpCounter(games) {
+      try { return await (await backend()).bumpCounter(games); } catch { return { ladders: 0, games: 0 }; }
     },
   };
 
