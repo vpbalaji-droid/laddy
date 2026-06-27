@@ -930,5 +930,19 @@ function toast(msg) {
 
 /* ---- service worker for installability/offline ---- */
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  // updateViaCache:'none' = never serve the SW script itself from HTTP cache,
+  // so a new sw.js is always detected on load.
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+    .then(reg => {
+      reg.update();
+      // When a new SW takes control, reload once so the user gets fresh code
+      // without any manual cache clearing.
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => {
+        if (reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
+    })
+    .catch(() => {});
 }

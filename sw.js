@@ -1,4 +1,4 @@
-const CACHE = "bl-v17";
+const CACHE = "bl-v18";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js",
   "./sync.js", "./firebase-config.js",
@@ -6,7 +6,13 @@ const ASSETS = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  // {cache:'reload'} forces fresh copies from the network, bypassing the
+  // browser's HTTP cache (which on GitHub Pages can serve stale files).
+  e.waitUntil(
+    caches.open(CACHE)
+      .then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: "reload" }))))
+      .then(() => self.skipWaiting())
+  );
 });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(keys =>
@@ -14,12 +20,12 @@ self.addEventListener("activate", e => {
 });
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
-  // never cache cross-origin (e.g. Apps Script POSTs)
+  // never intercept cross-origin (e.g. Firestore/Apps Script)
   if (url.origin !== location.origin) return;
-  // Network-first for our own files so code updates always reach the user;
-  // fall back to cache only when offline.
+  // Network-first, bypassing the HTTP cache, so code updates always win;
+  // fall back to our cache only when offline.
   e.respondWith(
-    fetch(e.request).then(res => {
+    fetch(e.request, { cache: "no-store" }).then(res => {
       const copy = res.clone();
       caches.open(CACHE).then(c => c.put(e.request, copy));
       return res;
