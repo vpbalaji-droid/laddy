@@ -56,7 +56,6 @@ function persist() { store.save(state); }
 let sessionId = null;
 let isJoiner = false;
 let unsubscribe = null;     // tears down the live subscription
-let suppressRender = false; // guards against echoing our own writes
 
 function shareUrl(id) {
   const u = new URL(location.href);
@@ -83,20 +82,44 @@ function scoresAsMap() {
   return m;
 }
 
-// Apply an incoming session snapshot to local state, then re-render.
-function applySession(s) {
+// Apply an incoming session snapshot to local state.
+// `live` = true means it arrived from a sync subscription while running; in that
+// case we PATCH the DOM in place (so we never destroy the input the user is
+// typing in and the keyboard stays up) instead of re-rendering everything.
+function applySession(s, live) {
   if (!s) return;
+  const structureChanged =
+    JSON.stringify(state.players) !== JSON.stringify(s.players || []) ||
+    JSON.stringify(state.assign) !== JSON.stringify(s.assign || {}) ||
+    state.courts !== (s.courts ?? state.courts);
+
   state.title = s.meta?.title ?? state.title;
   state.date = s.meta?.date ?? state.date;
   state.courts = s.courts ?? state.courts;
   state.players = s.players || [];
   state.assign = s.assign || {};
   buildGroupsFromAssign();
-  // overlay synced scores onto the derived groups
   const sc = s.scores || {};
   (state.groups || []).forEach((g, ci) => { g.scores = sc[ci] || {}; });
   persist();
-  if (!suppressRender) render();
+
+  // Full render only on first load or when the roster/courts actually changed.
+  // A pure score update on the Play tab is patched in place below.
+  if (!live || structureChanged || view !== "play") { render(); return; }
+  patchScoresInPlace();
+}
+
+// Update score inputs + totals from current state WITHOUT rebuilding the DOM.
+// Skips the input the user is actively editing so their typing/keyboard survive.
+function patchScoresInPlace() {
+  const active = document.activeElement;
+  app.querySelectorAll("input[data-g]").forEach(inp => {
+    if (inp === active) return; // never clobber the field being typed in
+    const gi = +inp.dataset.group, game = +inp.dataset.g, side = inp.dataset.side;
+    const v = state.groups[gi]?.scores?.[game]?.[side] ?? "";
+    if (String(inp.value) !== String(v)) inp.value = v;
+  });
+  state.groups.forEach((_, gi) => updateTotalsUI(gi));
 }
 
 async function startSharing() {
@@ -113,10 +136,7 @@ async function startSharing() {
 
 async function subscribe() {
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
-  unsubscribe = await Sync.join(sessionId, s => {
-    suppressRender = false;
-    applySession(s);
-  });
+  unsubscribe = await Sync.join(sessionId, s => applySession(s, true));
 }
 
 // Called when a device opens ?s=ID — pull the session and go live on Play tab.
@@ -133,7 +153,6 @@ async function joinSession(id) {
 // Write a single score field; merges remotely so concurrent editors don't clash.
 async function pushScore(court, game, side, value) {
   if (!sessionId) return;             // local-only mode: nothing to push
-  suppressRender = true;              // ignore the echo of our own write
   try { await Sync.setScore(sessionId, court, game, side, value); }
   catch (e) { toast("Sync error: " + e.message); }
 }
