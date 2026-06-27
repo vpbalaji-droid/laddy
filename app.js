@@ -384,12 +384,13 @@ function renderPlayers() {
 
   list.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
     state.players = state.players.filter(p => p.id !== b.dataset.del);
+    delete state.assign[b.dataset.del];
     // invalidate groups if roster changed
     state.groups = null; persist(); renderPlayers();
   });
   const clear = document.getElementById("clearBtn");
   if (clear) clear.onclick = () => {
-    if (confirm("Remove all players?")) { state.players = []; state.groups = null; persist(); renderPlayers(); }
+    if (confirm("Remove all players?")) { state.players = []; state.assign = {}; state.groups = null; persist(); renderPlayers(); }
   };
   const next = document.getElementById("toCourts");
   if (next) next.onclick = () => setView("setup");
@@ -400,14 +401,26 @@ function renderPlayers() {
 function groupSizeOk(size) { return size >= 4 && size <= 6; }
 
 // Count players currently assigned to each court (0-based court index).
+// Only count CURRENT players — `assign` can hold stale entries for players that
+// were removed/re-pasted, which would otherwise inflate the court counts.
 function courtCounts() {
   const counts = Array.from({ length: state.courts }, () => 0);
-  Object.values(state.assign).forEach(c => { if (c >= 0 && c < state.courts) counts[c]++; });
+  state.players.forEach(p => {
+    const c = state.assign[p.id];
+    if (c >= 0 && c < state.courts) counts[c]++;
+  });
   return counts;
 }
 
 function unassignedPlayers() {
   return state.players.filter(p => state.assign[p.id] === undefined || state.assign[p.id] === null);
+}
+
+// Drop assignment entries for players no longer on the roster (prevents stale
+// orphans from inflating court counts).
+function pruneAssign() {
+  const live = new Set(state.players.map(p => p.id));
+  Object.keys(state.assign).forEach(id => { if (!live.has(id)) delete state.assign[id]; });
 }
 
 // Players ordered by court allocation: each assigned court (in order) preceded by a
@@ -431,6 +444,7 @@ function orderedAssignList() {
 }
 
 function renderSetup() {
+  pruneAssign(); // clean any stale assignments from removed/re-pasted players
   const n = state.players.length;
   const counts = courtCounts();
   const courtBtns = (id) => Array.from({ length: state.courts }, (_, ci) =>
