@@ -704,7 +704,7 @@ function renderSheet() {
   const complete = done === total;
   app.innerHTML = `
     <div class="card">
-      <h2>Finalize & generate PDF</h2>
+      <h2>Finalize &amp; share</h2>
       <label class="muted">Title</label>
       <input id="docTitle" class="field" value="${escapeHtml(state.title)}" />
       <label class="muted" style="margin-top:8px;display:block">Date</label>
@@ -715,10 +715,15 @@ function renderSheet() {
         ${complete ? "✓ All games scored." : `<span style="color:var(--danger)">${total - done} game(s) still blank — blanks count as 0.</span>`}
       </p>
 
-      <button id="finalizeBtn" class="btn block" style="margin-top:8px">
-        Finalize score &amp; generate PDF
+      <button id="shareImgBtn" class="btn volt block" style="margin-top:8px">
+        📲 Share results image
       </button>
-      <p class="help">Opens a clean printable sheet, then your phone's <b>Save as PDF</b> dialog. Choose "Save as PDF" as the destination to download it.</p>
+      <p class="help">Creates a results image and opens your phone's share sheet — pick <b>WhatsApp</b> (or any app). Shows inline in the chat.</p>
+
+      <button id="finalizeBtn" class="btn block" style="margin-top:10px">
+        Generate PDF (Save as PDF)
+      </button>
+      <p class="help">Opens a printable sheet, then your phone's <b>Save as PDF</b> dialog.</p>
 
       <div class="row" style="margin-top:6px">
         <button id="previewBtn" class="btn ghost sm">Preview standings</button>
@@ -728,6 +733,7 @@ function renderSheet() {
 
   document.getElementById("docTitle").onchange = e => { state.title = e.target.value.trim() || "Mini League Ladder"; persist(); };
   document.getElementById("docDate").onchange = e => { state.date = e.target.value.trim(); persist(); };
+  document.getElementById("shareImgBtn").onclick = shareResultsImage;
   document.getElementById("finalizeBtn").onclick = finalizeAndPrint;
   document.getElementById("previewBtn").onclick = () => {
     const el = document.getElementById("finalPreview");
@@ -773,6 +779,156 @@ function buildPayload() {
       };
     }),
   };
+}
+
+/* ---------- Share results as an image (WhatsApp etc.) ---------- */
+
+// Draw the results onto a canvas and return a PNG Blob. Zero dependencies.
+function buildResultsImage() {
+  const p = buildPayload();
+  const W = 1080;
+  const PAD = 40, GAP = 28;
+  const ROW_H = 52, HEAD_H = 54, COURT_TITLE_H = 56, CHAMP_H = 40;
+
+  // --- measure total height first ---
+  let h = 0;
+  h += 140;                              // top banner
+  p.groups.forEach(g => {
+    h += GAP + COURT_TITLE_H + CHAMP_H + HEAD_H;
+    h += g.players.length * ROW_H;
+  });
+  h += GAP + 64;                          // footer
+
+  const dpr = 2;                          // crisp on phones
+  const cv = document.createElement("canvas");
+  cv.width = W * dpr; cv.height = h * dpr;
+  const x = cv.getContext("2d");
+  x.scale(dpr, dpr);
+  const FONT = "Arial, Helvetica, sans-serif";
+
+  // background
+  x.fillStyle = "#eef1f7"; x.fillRect(0, 0, W, h);
+
+  // --- top banner (gradient) ---
+  const g1 = x.createLinearGradient(0, 0, W, 140);
+  g1.addColorStop(0, "#1b1f3b"); g1.addColorStop(.6, "#2563ff"); g1.addColorStop(1, "#13b5ff");
+  roundRect(x, PAD, 24, W - PAD * 2, 100, 16); x.fillStyle = g1; x.fill();
+  x.fillStyle = "#c6ff00";
+  x.font = `italic 800 40px ${FONT}`; x.textBaseline = "middle";
+  x.fillText("Laddy", PAD + 28, 74);
+  const brandW = x.measureText("Laddy").width;
+  x.fillStyle = "#ffffff";
+  x.font = `italic 800 34px ${FONT}`;
+  x.fillText(`· ${p.title}`, PAD + 28 + brandW + 14, 74);
+  x.font = `600 22px ${FONT}`; x.textAlign = "right";
+  x.fillText(p.date, W - PAD - 28, 74);
+  x.textAlign = "left";
+
+  let y = 140;
+  const accents = [["#2563ff","#13b5ff"],["#7c3aed","#c026d3"],["#0d9488","#22c55e"],["#ea580c","#f59e0b"]];
+  const MEDAL = { 1: "🏆", 2: "🥈", 3: "🥉" };
+
+  p.groups.forEach((g, gi) => {
+    y += GAP;
+    const left = PAD, right = W - PAD, width = right - left;
+
+    // court title bar
+    const [c1, c2] = accents[gi % accents.length];
+    const cg = x.createLinearGradient(left, y, right, y);
+    cg.addColorStop(0, c1); cg.addColorStop(1, c2);
+    roundRect(x, left, y, width, COURT_TITLE_H, 12, true, false);
+    x.fillStyle = cg; x.fill();
+    x.fillStyle = "#fff"; x.font = `800 26px ${FONT}`; x.textBaseline = "middle";
+    x.fillText(`Group ${g.label}`, left + 18, y + COURT_TITLE_H / 2);
+    x.textAlign = "right"; x.font = `600 18px ${FONT}`;
+    x.fillText(`COURT ${g.court}`, right - 18, y + COURT_TITLE_H / 2);
+    x.textAlign = "left";
+    y += COURT_TITLE_H;
+
+    // champion strip
+    const sorted = g.players.slice().sort((a, b) => a.ranking - b.ranking);
+    const champ = sorted.find(pl => pl.ranking === 1);
+    x.fillStyle = "#fff7d6"; x.fillRect(left, y, width, CHAMP_H);
+    x.fillStyle = "#7a5b00"; x.font = `bold 19px ${FONT}`;
+    x.fillText(`🏆 Champion: ${champ ? champ.name : "—"}`, left + 16, y + CHAMP_H / 2);
+    if (champ) {
+      x.textAlign = "right";
+      x.fillText(`${champ.total} pts`, right - 16, y + CHAMP_H / 2);
+      x.textAlign = "left";
+    }
+    y += CHAMP_H;
+
+    // table header
+    const cRank = left + 16, cName = left + 130, cTot = right - 16;
+    x.fillStyle = "#1b1f3b"; x.fillRect(left, y, width, HEAD_H);
+    x.fillStyle = "#fff"; x.font = `700 18px ${FONT}`;
+    x.fillText("RANK", cRank, y + HEAD_H / 2);
+    x.fillText("PLAYER", cName, y + HEAD_H / 2);
+    x.textAlign = "right"; x.fillText("TOTAL", cTot, y + HEAD_H / 2); x.textAlign = "left";
+    y += HEAD_H;
+
+    // rows
+    sorted.forEach(pl => {
+      const tint = pl.ranking === 1 ? "#fff4c2" : pl.ranking === 2 ? "#eef1f6"
+                 : pl.ranking === 3 ? "#fbe6d2" : "#ffffff";
+      x.fillStyle = tint; x.fillRect(left, y, width, ROW_H);
+      x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(left, y, width, ROW_H);
+      x.fillStyle = "#161a2b"; x.font = `bold 22px ${FONT}`;
+      const medal = MEDAL[pl.ranking] || "";
+      x.fillText(`${medal} ${pl.ranking}`.trim(), cRank, y + ROW_H / 2);
+      x.font = `500 22px ${FONT}`;
+      x.fillText(pl.name, cName, y + ROW_H / 2);
+      x.textAlign = "right"; x.font = `bold 22px ${FONT}`;
+      x.fillText(String(pl.total), cTot, y + ROW_H / 2); x.textAlign = "left";
+      y += ROW_H;
+    });
+  });
+
+  // footer
+  y += GAP;
+  x.fillStyle = "#6b7280"; x.font = `16px ${FONT}`; x.textAlign = "center";
+  x.fillText("Generated by Laddy 🏸  ·  Total = points your pair scored across your games", W / 2, y + 12);
+  x.textAlign = "left";
+
+  return new Promise(res => cv.toBlob(b => res(b), "image/png"));
+}
+
+// Helper: rounded rectangle path
+function roundRect(ctx, x, y, w, hh, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + hh, r);
+  ctx.arcTo(x + w, y + hh, x, y + hh, r);
+  ctx.arcTo(x, y + hh, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+async function shareResultsImage() {
+  const btn = document.getElementById("shareImgBtn");
+  if (btn) { btn.disabled = true; btn.textContent = "Preparing image…"; }
+  try {
+    const blob = await buildResultsImage();
+    const fname = `${(state.title || "laddy").replace(/[^\w]+/g, "_")}_${state.date.replace(/[^\w]+/g, "_")}.png`;
+    const file = new File([blob], fname, { type: "image/png" });
+
+    // Preferred path: native share sheet with the image file (Android Chrome).
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: state.title, text: `${state.title} — results 🏸` });
+    } else {
+      // Fallback: download the PNG so the user can attach it manually.
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = fname; a.click();
+      URL.revokeObjectURL(url);
+      toast("Image saved — attach it in WhatsApp");
+    }
+  } catch (e) {
+    if (e && e.name === "AbortError") { /* user cancelled the share sheet */ }
+    else toast("Couldn't share image: " + (e?.message || e));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "📲 Share results image"; }
+  }
 }
 
 // Build the printable HTML document and open the print/Save-as-PDF dialog.
