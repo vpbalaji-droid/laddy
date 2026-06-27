@@ -276,7 +276,7 @@ function num(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
 /* ===================== Rendering ===================== */
 
 const app = document.getElementById("app");
-let view = "players";
+let view = "home";
 
 document.querySelectorAll(".tab").forEach(t =>
   t.addEventListener("click", () => setView(t.dataset.view)));
@@ -292,10 +292,55 @@ function setView(v) {
 
 function render() {
   document.getElementById("dateLabel").textContent = state.date;
+  if (view === "home") return renderHome();
   if (view === "players") return renderPlayers();
   if (view === "setup") return renderSetup();
   if (view === "play") return renderPlay();
   if (view === "sheet") return renderSheet();
+}
+
+/* ---------- Home / intro ---------- */
+function renderHome() {
+  const n = state.players.length;
+  const hasGroups = !!(state.groups && state.groups.length);
+  app.innerHTML = `
+    <div class="hero">
+      <img src="icons/icon.svg" class="hero-logo" alt="LaddR" />
+      <h2 class="hero-title">LaddR</h2>
+      <p class="hero-tag">Smash, Track &amp; Rank</p>
+      <p class="hero-sub">Run a badminton mini-league in minutes — split players across courts,
+        play a fair doubles round-robin, score live from every phone, and crown your champions.</p>
+      <button id="homeStart" class="btn volt block" style="margin-top:14px">
+        ${n ? "Continue →" : "Get started →"}
+      </button>
+      ${n ? `<p class="help" style="text-align:center">${n} player${n!==1?"s":""} on the roster${hasGroups ? " · groups ready" : ""}.</p>` : ""}
+    </div>
+
+    <div class="card">
+      <h2>How it works</h2>
+      <ol class="how">
+        <li><b>Players</b> — paste your attendee list (numbered lists & headers are cleaned up automatically).</li>
+        <li><b>Courts</b> — pick how many courts; tap to assign each player (4–6 per court).</li>
+        <li><b>Play</b> — each court runs a fixed doubles round-robin so partners rotate and everyone plays equally. Enter scores as you go.</li>
+        <li><b>Finalize</b> — see rankings & champions, then share a results image to WhatsApp or save a PDF.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Score together, live</h2>
+      <p class="muted">On the Play tab, tap <b>Start live scoring</b> to get a share link. Everyone can
+        open it on their own phone and enter scores — results update on every screen in real time.</p>
+    </div>
+
+    <div class="row wrap" style="justify-content:center; gap:10px">
+      <button class="btn secondary sm" data-go="players">Players</button>
+      <button class="btn secondary sm" data-go="setup">Courts</button>
+      <button class="btn secondary sm" data-go="play">Play</button>
+      <button class="btn secondary sm" data-go="sheet">Finalize</button>
+    </div>`;
+
+  document.getElementById("homeStart").onclick = () => setView(n ? "setup" : "players");
+  app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => setView(b.dataset.go));
 }
 
 /* ---------- Players ---------- */

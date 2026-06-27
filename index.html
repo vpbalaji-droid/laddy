@@ -12,12 +12,19 @@
 </head>
 <body>
   <header class="appbar">
-    <h1><img src="icons/icon.svg" class="logo" alt="" /> LaddR</h1>
+    <div class="brandwrap">
+      <img src="icons/icon.svg" class="logo" alt="" />
+      <div class="brandtext">
+        <h1>LaddR</h1>
+        <span class="tagline">Smash, Track &amp; Rank</span>
+      </div>
+    </div>
     <span id="dateLabel" class="date"></span>
   </header>
 
   <nav class="tabs">
-    <button class="tab active" data-view="players">Players</button>
+    <button class="tab active" data-view="home">Home</button>
+    <button class="tab" data-view="players">Players</button>
     <button class="tab" data-view="setup">Courts</button>
     <button class="tab" data-view="play">Play</button>
     <button class="tab" data-view="sheet">Finalize</button>
