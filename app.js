@@ -122,25 +122,24 @@ function patchScoresInPlace() {
   state.groups.forEach((_, gi) => updateTotalsUI(gi));
 }
 
-// Sessions this device created (is host of). Persisted so a refresh — which
-// lands on ?s=ID — knows to resume as HOST (full app + PDF), not a joiner.
-function hostedSessions() {
-  try { return JSON.parse(localStorage.getItem("bl_hosted")) || []; } catch { return []; }
+// The session this device HOSTS, persisted across refreshes. The host's own URL
+// is kept CLEAN (no ?s=) so there's never any host/joiner ambiguity: only people
+// who open a ?s= link are joiners; the host reconnects from this stored id.
+function myHostSession() { return localStorage.getItem("bl_host_session") || null; }
+function setHostSession(id) {
+  if (id) localStorage.setItem("bl_host_session", id);
+  else localStorage.removeItem("bl_host_session");
 }
-function rememberHosted(id) {
-  const h = hostedSessions();
-  if (!h.includes(id)) { h.push(id); localStorage.setItem("bl_hosted", JSON.stringify(h)); }
-}
-function isHostOf(id) { return hostedSessions().includes(id); }
 
 async function startSharing() {
   if (!assignValidity().ok) { toast("Finish assigning courts first"); return; }
   buildGroupsFromAssign();
   sessionId = Sync.newSessionId();
-  rememberHosted(sessionId);
+  setHostSession(sessionId);
   await Sync.create(sessionId, toSession());
-  // reflect the id in the URL without reloading
-  history.replaceState(null, "", shareUrl(sessionId));
+  // Keep the host on a clean URL (strip any ?s=) — the link is shared via Copy,
+  // not the address bar, and a clean URL means refresh always resumes as host.
+  history.replaceState(null, "", location.pathname);
   await subscribe();
   toast(Sync.mode === "firebase" ? "Live session created" : "Local session (test mode)");
   render();
@@ -549,7 +548,8 @@ function playShareBar() {
         </div>
         <div class="row wrap" style="margin-top:6px">
           <button id="shareSheet" class="btn secondary sm">Share…</button>
-          <span class="help" style="margin:0">Session code: <code>${sessionId}</code></span>
+          <button id="endShare" class="btn ghost sm">End session</button>
+          <span class="help" style="margin:0">Code: <code>${sessionId}</code></span>
         </div>`}
       </div>`;
   }
@@ -572,6 +572,16 @@ function wireShareBar() {
     const url = shareUrl(sessionId);
     if (navigator.share) { try { await navigator.share({ title: state.title, text: "Enter badminton scores:", url }); } catch {} }
     else copy(url, "Link copied");
+  };
+  const end = document.getElementById("endShare");
+  if (end) end.onclick = () => {
+    if (!confirm("End this live session? Scores stay on this device; the share link stops syncing.")) return;
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    setHostSession(null);
+    sessionId = null;
+    history.replaceState(null, "", location.pathname);
+    toast("Session ended");
+    renderPlay();
   };
 }
 
@@ -896,16 +906,23 @@ function toast(msg) {
 (function boot() {
   const params = new URLSearchParams(location.search);
   const sid = params.get("s");
-  if (sid && isHostOf(sid)) {
-    // Host refreshed their own session link — keep full app (incl. Finalize/PDF).
+  const mine = myHostSession();
+  if (sid && sid === mine) {
+    // Host opened/refreshed their own session link — keep full app (incl. PDF).
+    history.replaceState(null, "", location.pathname); // clean the URL
     view = "play";
     resumeAsHost(sid).then(() => render());
     render();
   } else if (sid) {
-    // Someone else's share link: scoring-only joiner.
+    // Someone else's share link: scoring-only joiner view.
     document.body.classList.add("joiner");
     joinSession(sid).then(() => render());
-    render(); // show "loading/play" frame immediately
+    render();
+  } else if (mine) {
+    // No link in URL but this device hosts a live session — resume as host.
+    view = "play";
+    resumeAsHost(mine).then(() => render());
+    render();
   } else {
     render();
   }
