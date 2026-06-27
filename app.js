@@ -789,6 +789,7 @@ function buildResultsImage() {
   const W = 1080;
   const PAD = 40, GAP = 28;
   const ROW_H = 52, HEAD_H = 54, COURT_TITLE_H = 56, CHAMP_H = 40;
+  const GAME_HEAD_H = 40, GAME_ROW_H = 46, SECTION_GAP = 10;
 
   // --- measure total height first ---
   let h = 0;
@@ -796,6 +797,8 @@ function buildResultsImage() {
   p.groups.forEach(g => {
     h += GAP + COURT_TITLE_H + CHAMP_H + HEAD_H;
     h += g.players.length * ROW_H;
+    // games section: a header + one row per game
+    h += SECTION_GAP + GAME_HEAD_H + g.games.length * GAME_ROW_H;
   });
   h += GAP + 64;                          // footer
 
@@ -881,6 +884,42 @@ function buildResultsImage() {
       x.textAlign = "right"; x.font = `bold 22px ${FONT}`;
       x.fillText(String(pl.total), cTot, y + ROW_H / 2); x.textAlign = "left";
       y += ROW_H;
+    });
+
+    // --- games section (game-by-game scores) ---
+    y += SECTION_GAP;
+    const cGame = left + 16, cScore = left + width / 2;
+    x.fillStyle = "#1b1f3b"; x.fillRect(left, y, width, GAME_HEAD_H);
+    x.fillStyle = "#fff"; x.font = `700 16px ${FONT}`;
+    x.fillText("GAME", cGame, y + GAME_HEAD_H / 2);
+    x.fillText("MATCH-UP", left + 110, y + GAME_HEAD_H / 2);
+    x.textAlign = "center"; x.fillText("SCORE", cScore, y + GAME_HEAD_H / 2); x.textAlign = "left";
+    y += GAME_HEAD_H;
+
+    g.games.forEach((m, mi) => {
+      x.fillStyle = mi % 2 ? "#f6f8fc" : "#ffffff";
+      x.fillRect(left, y, width, GAME_ROW_H);
+      x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(left, y, width, GAME_ROW_H);
+      const mid = y + GAME_ROW_H / 2;
+      // game pill
+      x.fillStyle = "#2563ff"; roundRect(x, cGame, mid - 13, 56, 26, 13); x.fill();
+      x.fillStyle = "#fff"; x.font = `bold 15px ${FONT}`; x.textAlign = "center";
+      x.fillText(`G${m.game}`, cGame + 28, mid);
+      x.textAlign = "left";
+      // team A & B, winner bold green
+      const aWin = m.scoreA > m.scoreB, bWin = m.scoreB > m.scoreA;
+      const teamA = `${m.teamA[0]} & ${m.teamA[1]}`, teamB = `${m.teamB[0]} & ${m.teamB[1]}`;
+      x.font = `${aWin ? "bold" : "500"} 17px ${FONT}`;
+      x.fillStyle = aWin ? "#1b6b39" : "#161a2b"; x.textAlign = "right";
+      x.fillText(teamA, cScore - 64, mid);
+      x.font = `${bWin ? "bold" : "500"} 17px ${FONT}`;
+      x.fillStyle = bWin ? "#1b6b39" : "#161a2b"; x.textAlign = "left";
+      x.fillText(teamB, cScore + 64, mid);
+      // score in the middle
+      x.fillStyle = "#1b1f3b"; x.font = `bold 19px ${FONT}`; x.textAlign = "center";
+      x.fillText(`${m.scoreA} – ${m.scoreB}`, cScore, mid);
+      x.textAlign = "left";
+      y += GAME_ROW_H;
     });
   });
 
