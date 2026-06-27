@@ -1,4 +1,4 @@
-const CACHE = "bl-v26";
+const CACHE = "bl-v27";
 const ASSETS = [
   "./", "./index.html", "./styles.css", "./app.js",
   "./sync.js", "./firebase-config.js",
