@@ -1,6 +1,6 @@
 {
-  "name": "Laddy",
-  "short_name": "Laddy",
+  "name": "LaddR",
+  "short_name": "LaddR",
   "description": "Allocate badminton courts, run a mini-league ladder, score live together, and export a PDF.",
   "start_url": "./index.html",
   "scope": "./",
