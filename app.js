@@ -308,8 +308,10 @@ function renderHome() {
       <img src="icons/icon.svg" class="hero-logo" alt="LaddR" />
       <h2 class="hero-title">LaddR</h2>
       <p class="hero-tag">Smash, Track &amp; Rank</p>
+      <span class="free-badge">✨ 100% Free</span>
       <p class="hero-sub">Run a badminton mini-league in minutes — split players across courts,
-        play a fair doubles round-robin, score live from every phone, and crown your champions.</p>
+        play a fair doubles round-robin, score live from every phone, and crown your champions.
+        Free to use, no sign-up.</p>
       <button id="homeStart" class="btn volt block" style="margin-top:14px">
         ${n ? "Continue →" : "Get started →"}
       </button>
