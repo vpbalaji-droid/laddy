@@ -1,0 +1,14 @@
+{
+  "name": "Laddy",
+  "short_name": "Laddy",
+  "description": "Allocate badminton courts, run a mini-league ladder, score live together, and export a PDF.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1b1f3b",
+  "theme_color": "#1b1f3b",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

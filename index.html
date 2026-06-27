@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1b1f3b" />
+  <title>Laddy</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="appbar">
+    <h1><img src="icons/icon.svg" class="logo" alt="" /> Laddy</h1>
+    <span id="dateLabel" class="date"></span>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-view="players">Players</button>
+    <button class="tab" data-view="setup">Courts</button>
+    <button class="tab" data-view="play">Play</button>
+    <button class="tab" data-view="sheet">Finalize</button>
+  </nav>
+
+  <main id="app"></main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="firebase-config.js"></script>
+  <script src="sync.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

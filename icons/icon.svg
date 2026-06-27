@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1f3b"/>
+      <stop offset="0.55" stop-color="#2563ff"/>
+      <stop offset="1" stop-color="#13b5ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <!-- speed streaks -->
+  <g stroke="#c6ff00" stroke-width="13" stroke-linecap="round" opacity="0.9">
+    <line x1="78" y1="150" x2="150" y2="150"/>
+    <line x1="60" y1="200" x2="150" y2="200"/>
+    <line x1="84" y1="250" x2="150" y2="250"/>
+  </g>
+  <!-- shuttlecock: feathered skirt -->
+  <g transform="rotate(38 300 256)">
+    <!-- feathers -->
+    <g fill="#ffffff">
+      <path d="M300 120 L268 250 L300 240 Z"/>
+      <path d="M300 120 L300 240 L332 250 Z" fill="#eef1f9"/>
+      <path d="M262 138 L260 258 L286 244 Z"/>
+      <path d="M338 138 L340 258 L314 244 Z" fill="#eef1f9"/>
+      <path d="M232 170 L250 268 L274 250 Z"/>
+      <path d="M368 170 L350 268 L326 250 Z" fill="#eef1f9"/>
+    </g>
+    <!-- cork base -->
+    <ellipse cx="300" cy="300" rx="52" ry="44" fill="#c6ff00"/>
+    <ellipse cx="300" cy="296" rx="52" ry="40" fill="#dcff5a"/>
+    <path d="M252 300 Q300 332 348 300 L348 312 Q300 348 252 312 Z" fill="#a9e000"/>
+  </g>
+</svg>
