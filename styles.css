@@ -1,12 +1,12 @@
 :root{
-  /* LaddR — sporty palette. (Names kept for back-compat; values are the new brand.) */
-  --green:#2563ff;        /* primary: electric blue */
-  --green-dark:#1b1f3b;   /* deep navy (app bar, headers) */
+  /* LaddR — palette matched to the logo (navy shield + green ladder). */
+  --green:#1f8a3b;        /* primary: ladder green */
+  --green-dark:#163a6b;   /* navy (app bar, headers, shield) */
   --bg:#eef1f7; --card:#fff;
-  --line:#dde2ee; --muted:#6b7280; --accent:#c6ff00; /* volt lime */
-  --accent-ink:#1b1f3b;
+  --line:#dde2ee; --muted:#6b7280; --accent:#27ae45; /* bright green accent */
+  --accent-ink:#ffffff;
   --danger:#ef2b4b; --text:#161a2b;
-  --grad:linear-gradient(120deg,#1b1f3b 0%,#2563ff 60%,#13b5ff 100%);
+  --grad:linear-gradient(120deg,#102a4e 0%,#163a6b 55%,#1f8a3b 100%);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -53,7 +53,7 @@ input,select,button,textarea{font-family:inherit; font-size:15px}
 .btn{
   border:0; border-radius:10px; padding:11px 14px; font-weight:800; cursor:pointer;
   background:var(--green); color:#fff; letter-spacing:.01em;
-  box-shadow:0 2px 8px rgba(37,99,255,.28);
+  box-shadow:0 2px 8px rgba(31,138,59,.28);
 }
 .btn:active{transform:translateY(1px)}
 .btn.secondary{background:#e6ecfb; color:var(--green); box-shadow:none}
@@ -63,7 +63,7 @@ input,select,button,textarea{font-family:inherit; font-size:15px}
 .btn.sm{padding:7px 10px; font-size:13px; border-radius:8px; box-shadow:none}
 .btn:disabled{opacity:.5; cursor:not-allowed; box-shadow:none}
 /* "volt" call-to-action for the marquee action (e.g. Start live scoring) */
-.btn.volt{background:var(--accent); color:var(--accent-ink); box-shadow:0 2px 10px rgba(198,255,0,.4)}
+.btn.volt{background:var(--accent); color:var(--accent-ink); box-shadow:0 2px 10px rgba(39,174,69,.4)}
 
 .pill{
   display:inline-flex; align-items:center; gap:6px; background:#eef3f1;
@@ -143,7 +143,7 @@ td.name{text-align:left; min-width:90px}
 .match-g{
   justify-self:start; font-weight:800; font-size:12px; color:#fff;
   background:var(--green); border-radius:999px; padding:4px 11px; line-height:1;
-  box-shadow:0 1px 4px rgba(37,99,255,.3);
+  box-shadow:0 1px 4px rgba(31,138,59,.3);
 }
 .pair{font-size:13px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis}
 .pair.a{text-align:right}

@@ -1,32 +1,71 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1b1f3b"/>
-      <stop offset="0.55" stop-color="#2563ff"/>
-      <stop offset="1" stop-color="#13b5ff"/>
-    </linearGradient>
+    <clipPath id="shield">
+      <path d="M256 40
+               C 200 70 150 80 96 80
+               L 96 250
+               C 96 360 170 430 256 472
+               C 342 430 416 360 416 250
+               L 416 80
+               C 362 80 312 70 256 40 Z"/>
+    </clipPath>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <!-- speed streaks -->
-  <g stroke="#c6ff00" stroke-width="13" stroke-linecap="round" opacity="0.9">
-    <line x1="78" y1="150" x2="150" y2="150"/>
-    <line x1="60" y1="200" x2="150" y2="200"/>
-    <line x1="84" y1="250" x2="150" y2="250"/>
+
+  <!-- rounded white tile background (for maskable/app icon) -->
+  <rect width="512" height="512" rx="104" fill="#ffffff"/>
+
+  <!-- shield fill + clip group -->
+  <g clip-path="url(#shield)">
+    <rect x="80" y="30" width="352" height="452" fill="#ffffff"/>
+    <!-- green diagonal ladder climbing up-right -->
+    <g stroke="#27ae45" stroke-width="26" stroke-linecap="round">
+      <!-- two rails -->
+      <line x1="120" y1="430" x2="330" y2="150"/>
+      <line x1="170" y1="448" x2="380" y2="168"/>
+      <!-- rungs -->
+      <line x1="150" y1="400" x2="210" y2="395"/>
+      <line x1="185" y1="350" x2="248" y2="345"/>
+      <line x1="222" y1="300" x2="286" y2="296"/>
+      <line x1="258" y1="250" x2="322" y2="247"/>
+      <line x1="294" y1="200" x2="356" y2="198"/>
+    </g>
+    <!-- soft green leaf accent on the right -->
+    <path d="M360 150 C 392 220 392 300 320 360 C 360 290 352 220 360 150 Z" fill="#27ae45" opacity="0.85"/>
   </g>
-  <!-- shuttlecock: feathered skirt -->
-  <g transform="rotate(38 300 256)">
-    <!-- feathers -->
-    <g fill="#ffffff">
-      <path d="M300 120 L268 250 L300 240 Z"/>
-      <path d="M300 120 L300 240 L332 250 Z" fill="#eef1f9"/>
-      <path d="M262 138 L260 258 L286 244 Z"/>
-      <path d="M338 138 L340 258 L314 244 Z" fill="#eef1f9"/>
-      <path d="M232 170 L250 268 L274 250 Z"/>
-      <path d="M368 170 L350 268 L326 250 Z" fill="#eef1f9"/>
+
+  <!-- navy shield border -->
+  <path d="M256 40
+           C 200 70 150 80 96 80
+           L 96 250
+           C 96 360 170 430 256 472
+           C 342 430 416 360 416 250
+           L 416 80
+           C 362 80 312 70 256 40 Z"
+        fill="none" stroke="#163a6b" stroke-width="20" stroke-linejoin="round"/>
+
+  <!-- motion streaks behind the shuttlecock -->
+  <g stroke="#163a6b" stroke-width="11" stroke-linecap="round" fill="none" opacity="0.92">
+    <path d="M120 250 Q 175 215 235 205"/>
+    <path d="M132 290 Q 190 250 250 240"/>
+  </g>
+
+  <!-- shuttlecock, flying up-right -->
+  <g transform="rotate(34 270 175)">
+    <!-- feather skirt -->
+    <g fill="#ffffff" stroke="#163a6b" stroke-width="6" stroke-linejoin="round">
+      <path d="M270 70 L244 200 L296 200 Z"/>
+      <path d="M236 86 L232 206 L270 200 Z"/>
+      <path d="M304 86 L308 206 L270 200 Z"/>
+      <path d="M208 116 L222 214 L246 202 Z"/>
+      <path d="M332 116 L318 214 L294 202 Z"/>
+    </g>
+    <g stroke="#c7d2e0" stroke-width="3">
+      <line x1="270" y1="96" x2="270" y2="196"/>
+      <line x1="250" y1="104" x2="258" y2="196"/>
+      <line x1="290" y1="104" x2="282" y2="196"/>
     </g>
     <!-- cork base -->
-    <ellipse cx="300" cy="300" rx="52" ry="44" fill="#c6ff00"/>
-    <ellipse cx="300" cy="296" rx="52" ry="40" fill="#dcff5a"/>
-    <path d="M252 300 Q300 332 348 300 L348 312 Q300 348 252 312 Z" fill="#a9e000"/>
+    <ellipse cx="270" cy="214" rx="40" ry="30" fill="#163a6b"/>
+    <ellipse cx="270" cy="210" rx="40" ry="26" fill="#1f4f93"/>
   </g>
 </svg>

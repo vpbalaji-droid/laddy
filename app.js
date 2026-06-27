@@ -814,9 +814,9 @@ function buildResultsImage() {
 
   // --- top banner (gradient) ---
   const g1 = x.createLinearGradient(0, 0, W, 140);
-  g1.addColorStop(0, "#1b1f3b"); g1.addColorStop(.6, "#2563ff"); g1.addColorStop(1, "#13b5ff");
+  g1.addColorStop(0, "#102a4e"); g1.addColorStop(.55, "#163a6b"); g1.addColorStop(1, "#1f8a3b");
   roundRect(x, PAD, 24, W - PAD * 2, 100, 16); x.fillStyle = g1; x.fill();
-  x.fillStyle = "#c6ff00";
+  x.fillStyle = "#27ae45";
   x.font = `italic 800 40px ${FONT}`; x.textBaseline = "middle";
   x.fillText("LaddR", PAD + 28, 74);
   const brandW = x.measureText("LaddR").width;
@@ -828,7 +828,7 @@ function buildResultsImage() {
   x.textAlign = "left";
 
   let y = 140;
-  const accents = [["#2563ff","#13b5ff"],["#7c3aed","#c026d3"],["#0d9488","#22c55e"],["#ea580c","#f59e0b"]];
+  const accents = [["#1f8a3b","#27ae45"],["#163a6b","#1f4f93"],["#0d9488","#22c55e"],["#7c3aed","#c026d3"]];
   const MEDAL = { 1: "🏆", 2: "🥈", 3: "🥉" };
 
   // fit text into maxW by shrinking font down to a floor
@@ -876,7 +876,7 @@ function buildResultsImage() {
     /* ----- LEFT: standings ----- */
     let sy = top;
     const cRank = stL + 12, cName = stL + 96, cTot = stR - 12;
-    x.fillStyle = "#1b1f3b"; x.fillRect(stL, sy, stW, HEAD_H);
+    x.fillStyle = "#163a6b"; x.fillRect(stL, sy, stW, HEAD_H);
     x.fillStyle = "#fff"; x.font = `700 16px ${FONT}`; x.textBaseline = "middle";
     x.fillText("RANK", cRank, sy + HEAD_H / 2);
     x.fillText("PLAYER", cName, sy + HEAD_H / 2);
@@ -899,7 +899,7 @@ function buildResultsImage() {
 
     /* ----- RIGHT: games ----- */
     let gy = top;
-    x.fillStyle = "#1b1f3b"; x.fillRect(gmL, gy, gmW, HEAD_H);
+    x.fillStyle = "#163a6b"; x.fillRect(gmL, gy, gmW, HEAD_H);
     x.fillStyle = "#fff"; x.font = `700 16px ${FONT}`;
     x.fillText("GAME", gmL + 12, gy + HEAD_H / 2);
     x.fillText("MATCH-UP", gmL + 90, gy + HEAD_H / 2);
@@ -911,7 +911,7 @@ function buildResultsImage() {
       x.strokeStyle = "#e2e6f2"; x.lineWidth = 1; x.strokeRect(gmL, gy, gmW, GAME_ROW_H);
       const mid = gy + GAME_ROW_H / 2;
       // game pill
-      x.fillStyle = "#2563ff"; roundRect(x, gmL + 12, mid - 12, 50, 24, 12); x.fill();
+      x.fillStyle = "#1f8a3b"; roundRect(x, gmL + 12, mid - 12, 50, 24, 12); x.fill();
       x.fillStyle = "#fff"; x.font = `bold 14px ${FONT}`; x.textAlign = "center";
       x.fillText(`G${m.game}`, gmL + 37, mid); x.textAlign = "left";
       // teams (winner bold green), score centered
@@ -924,7 +924,7 @@ function buildResultsImage() {
       fitFont(teamB, bWin ? "bold" : "500", 15, gmR - (gScore + 40) - 12, 11);
       x.fillStyle = bWin ? "#1b6b39" : "#161a2b"; x.textAlign = "left";
       x.fillText(teamB, gScore + 40, mid);
-      x.fillStyle = "#1b1f3b"; x.font = `bold 18px ${FONT}`; x.textAlign = "center";
+      x.fillStyle = "#163a6b"; x.font = `bold 18px ${FONT}`; x.textAlign = "center";
       x.fillText(`${m.scoreA}–${m.scoreB}`, gScore, mid); x.textAlign = "left";
       gy += GAME_ROW_H;
     });
@@ -1051,11 +1051,11 @@ function printableHtml(p) {
     body { font-family: Arial, Helvetica, sans-serif; color:#161a2b; margin:0; }
     .head {
       display:flex; justify-content:space-between; align-items:center;
-      background:linear-gradient(120deg,#1b1f3b 0%,#2563ff 60%,#13b5ff 100%);
+      background:linear-gradient(120deg,#102a4e 0%,#163a6b 55%,#1f8a3b 100%);
       color:#fff; padding:14px 18px; border-radius:12px; margin-bottom:16px;
     }
     .head h1 { margin:0; font-size:23px; font-style:italic; letter-spacing:-.02em; }
-    .head h1 .brand { color:#c6ff00; }
+    .head h1 .brand { color:#27ae45; }
     .head .date { font-size:13px; background:rgba(255,255,255,.15); padding:6px 12px; border-radius:8px; }
     .grp { margin-bottom:16px; page-break-inside:avoid; border:1px solid #e2e6f2; border-radius:12px; overflow:hidden; }
     .grp h2 {
@@ -1065,8 +1065,8 @@ function printableHtml(p) {
     .grp h2 .court { font-weight:normal; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
                      background:rgba(255,255,255,.2); padding:3px 9px; border-radius:999px; }
     /* a different accent header per court */
-    .grp-0 h2 { background:linear-gradient(90deg,#2563ff,#13b5ff); }
-    .grp-1 h2 { background:linear-gradient(90deg,#7c3aed,#c026d3); }
+    .grp-0 h2 { background:linear-gradient(90deg,#1f8a3b,#27ae45); }
+    .grp-1 h2 { background:linear-gradient(90deg,#163a6b,#1f4f93); }
     .grp-2 h2 { background:linear-gradient(90deg,#0d9488,#22c55e); }
     .grp-3 h2 { background:linear-gradient(90deg,#ea580c,#f59e0b); }
     .champ {
@@ -1078,19 +1078,19 @@ function printableHtml(p) {
     .standings { width:44%; } .games { width:56%; }
     table { border-collapse:collapse; font-size:12px; width:100%; }
     th, td { border:1px solid #e2e6f2; padding:5px 7px; text-align:left; }
-    th { background:#1b1f3b; color:#fff; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
+    th { background:#163a6b; color:#fff; font-size:10px; text-transform:uppercase; letter-spacing:.04em; }
     td.c { text-align:center; } td.r { text-align:right; } td.b { font-weight:bold; }
     .rankcell { white-space:nowrap; font-weight:bold; }
     .medal { font-size:14px; margin-right:3px; }
-    .score { color:#1b1f3b; }
+    .score { color:#163a6b; }
     .wteam { font-weight:bold; color:#1b6b39; }
     tr.gold   td { background:#fff4c2; }
     tr.silver td { background:#eef1f6; }
     tr.bronze td { background:#fbe6d2; }
-    .gpill { display:inline-block; background:#2563ff; color:#fff; font-weight:bold;
+    .gpill { display:inline-block; background:#1f8a3b; color:#fff; font-weight:bold;
              font-size:10px; padding:2px 8px; border-radius:999px; }
     .foot { margin-top:12px; font-size:10px; color:#6b7280; text-align:center; }
-    .foot b { color:#2563ff; }
+    .foot b { color:#1f8a3b; }
   </style></head><body>
     <div class="head">
       <h1><span class="brand">LaddR</span> · ${escapeHtml(p.title)}</h1>
