@@ -122,10 +122,22 @@ function patchScoresInPlace() {
   state.groups.forEach((_, gi) => updateTotalsUI(gi));
 }
 
+// Sessions this device created (is host of). Persisted so a refresh — which
+// lands on ?s=ID — knows to resume as HOST (full app + PDF), not a joiner.
+function hostedSessions() {
+  try { return JSON.parse(localStorage.getItem("bl_hosted")) || []; } catch { return []; }
+}
+function rememberHosted(id) {
+  const h = hostedSessions();
+  if (!h.includes(id)) { h.push(id); localStorage.setItem("bl_hosted", JSON.stringify(h)); }
+}
+function isHostOf(id) { return hostedSessions().includes(id); }
+
 async function startSharing() {
   if (!assignValidity().ok) { toast("Finish assigning courts first"); return; }
   buildGroupsFromAssign();
   sessionId = Sync.newSessionId();
+  rememberHosted(sessionId);
   await Sync.create(sessionId, toSession());
   // reflect the id in the URL without reloading
   history.replaceState(null, "", shareUrl(sessionId));
@@ -139,7 +151,16 @@ async function subscribe() {
   unsubscribe = await Sync.join(sessionId, s => applySession(s, true));
 }
 
-// Called when a device opens ?s=ID — pull the session and go live on Play tab.
+// Host reopened their own session link (e.g. after a refresh): keep full access.
+async function resumeAsHost(id) {
+  sessionId = id;
+  isJoiner = false;
+  const existing = await Sync.get(id);
+  if (existing) applySession(existing);
+  await subscribe();
+}
+
+// A different device opened ?s=ID — scoring-only joiner view.
 async function joinSession(id) {
   sessionId = id;
   isJoiner = true;
@@ -875,8 +896,13 @@ function toast(msg) {
 (function boot() {
   const params = new URLSearchParams(location.search);
   const sid = params.get("s");
-  if (sid) {
-    // Opened via a share link: become a scoring-only joiner.
+  if (sid && isHostOf(sid)) {
+    // Host refreshed their own session link — keep full app (incl. Finalize/PDF).
+    view = "play";
+    resumeAsHost(sid).then(() => render());
+    render();
+  } else if (sid) {
+    // Someone else's share link: scoring-only joiner.
     document.body.classList.add("joiner");
     joinSession(sid).then(() => render());
     render(); // show "loading/play" frame immediately
